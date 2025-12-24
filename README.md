@@ -1,6 +1,7 @@
 # MSPubConverter
 
 A small utility to convert Microsoft Publisher (.pub) files to PDF using Microsoft Publisher's COM API.
+Being straight up honest, I had AI write this. I have tested it and it seems to work fine. Let me know about any issues. 
 
 ## Key Features
 
