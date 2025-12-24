@@ -3,7 +3,7 @@ import re
 import logging
 import win32com.client
 from win32com.client import constants, gencache
-from tkinter import Tk, filedialog
+from tkinter import Tk, filedialog, messagebox
 from tqdm import tqdm
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
@@ -14,6 +14,13 @@ def pick_folder(title):
     folder = filedialog.askdirectory(title=title)
     root.destroy()
     return folder
+
+def ask_yes_no(title, message) -> bool:
+    root = Tk()
+    root.withdraw()
+    answer = messagebox.askyesno(title, message)
+    root.destroy()
+    return answer
 
 def to_camel_case(s: str) -> str:
     # Split on any non-alphanumeric characters, drop empties
@@ -92,7 +99,7 @@ def convert_pub_to_pdf(publisher, input_pub, output_pdf):
             except Exception:
                 logging.exception("Error closing document for %s", input_pub)
 
-def convert_all_pub_files(parent_folder, output_root):
+def convert_all_pub_files(parent_folder, output_root, preserve_paths: bool):
     # Collect all .pub files first
     pub_files = []
     for root, dirs, files in os.walk(parent_folder):
@@ -120,11 +127,17 @@ def convert_all_pub_files(parent_folder, output_root):
             pass
 
         for input_path in tqdm(pub_files, desc="Converting files", unit="file"):
-            relative_path = os.path.relpath(os.path.dirname(input_path), parent_folder)
-            if relative_path == ".":
-                output_dir = output_root
+            # Determine output folder based on user's choice to preserve structure
+            if preserve_paths:
+                relative_path = os.path.relpath(os.path.dirname(input_path), parent_folder)
+                if relative_path == ".":
+                    output_dir = output_root
+                else:
+                    output_dir = os.path.join(output_root, relative_path)
             else:
-                output_dir = os.path.join(output_root, relative_path)
+                # Save all files directly into the parent output folder
+                output_dir = output_root
+
             output_dir = os.path.normpath(output_dir)
             os.makedirs(output_dir, exist_ok=True)
 
@@ -161,6 +174,15 @@ if __name__ == "__main__":
         print("No output folder selected.")
         exit()
 
-    convert_all_pub_files(input_folder, output_folder)
+    # Ask the user whether to preserve folder structure or save all into the selected parent output folder
+    preserve = ask_yes_no(
+        "Preserve folder structure?",
+        "Preserve the input folder structure under the output folder?\n\n"
+        "Yes: preserve subfolders (create same relative paths).\n"
+        "No: save all PDFs directly into the selected output folder."
+    )
+    logging.info("Preserve paths: %s", preserve)
+
+    convert_all_pub_files(input_folder, output_folder, preserve)
 
     print("\nConversion complete.")
