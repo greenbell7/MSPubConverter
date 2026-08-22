@@ -1,4 +1,5 @@
-﻿import os
+﻿# Microsoft Publisher → PDF Converter version 1.0
+import os
 import re
 import logging
 import win32com.client
@@ -162,7 +163,7 @@ def convert_all_pub_files(parent_folder, output_root, preserve_paths: bool):
                 logging.exception("Error quitting Publisher application")
 
 if __name__ == "__main__":
-    print("=== Microsoft Publisher → PDF Converter ===")
+    print("=== Microsoft Publisher → PDF Converter === Version 1.0")
 
     input_folder = pick_folder("Select the parent folder containing .pub files")
     if not input_folder:
